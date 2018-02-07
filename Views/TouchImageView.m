@@ -72,21 +72,11 @@
             break;
     }
     CGPoint point = [pan translationInView:pan.view];
-    [self printTransform:self.transform];
-    NSLog(@"dx=%f----dy=%f",(point.x) - x,(point.y) - y);
-
     self.transform = CGAffineTransformTranslate(self.transform, (point.x) - x,(point.y) - y);
     x = point.x;
     y = point.y;
-    NSLog(@"x=%f----y=%f",x,y);
-    [self printTransform:self.transform];
 }
 
-
--(void)printTransform:(CGAffineTransform)tansform{
-    
-    NSLog(@"transform : a = %f----b = %f ---- c = %f ---- d = %f ---- tx = %f ---- ty = %f",tansform.a,tansform.b,tansform.c,tansform.d,tansform.tx,tansform.ty);
-}
 
 -(void)handlePinchGestureRecognizer:(UIPinchGestureRecognizer*)pinch{
     switch (pinch.state) {
@@ -99,12 +89,6 @@
     self.transform = CGAffineTransformScale(self.transform, pinch.scale/s, pinch.scale/s);
     
     s = pinch.scale;
-    
-    NSLog(@"s=%f]",s);
-    //            [self makeTransformWithType:2];
-    [self printTransform:self.transform];
-    NSLog(@"======================================");
-
 }
 -(void)handleRotationGestureRecognizer:(UIRotationGestureRecognizer*)rotation{
     switch (rotation.state) {
@@ -114,14 +98,8 @@
         default:
             break;
     }
-    NSLog(@"======================================");
     self.transform = CGAffineTransformRotate(self.transform, rotation.rotation  - r);
     r = rotation.rotation;
-    NSLog(@"r=%f]",r);
-    //             [self makeTransformWithType:3];
-    [self printTransform:self.transform];
-    NSLog(@"======================================");
-
 }
 -(void)handleLongPressGestureRecognizer:(UILongPressGestureRecognizer*)longPress{
     
