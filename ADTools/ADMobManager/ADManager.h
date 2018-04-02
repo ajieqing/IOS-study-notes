@@ -9,19 +9,21 @@
 //使用方法：
 /**
  使用前先倒入ADMob库
- GoogleMobileAdsSdkiOS-7.4
+ GoogleMobileAdsSdk
  */
 //在AppDeletage中调用[ADManager manager];
 //在下面的宏定义中配置ADmob的APPID以及广告的id
+//具体创建广告和控制方法情参考FirebaseControl.h的说明
+//ADMob广告的插屏广告为一次性广告，如果某个广告位需要展示多次，单次展示完后需要在回调中重新加载
+//TESTMODE 为测试开关，记得改为NO
+
 
 
 #import <Foundation/Foundation.h>
 //ADmob的appid
-#define ADMOBAPPID @"ca-app-pub-4227955678326630~3841622506"
+#define ADMOBAPPID @""
 //广告ID
-#define main_banner @"ca-app-pub-4227955678326630/7592826865"
-#define album_banner @"ca-app-pub-4227955678326630/3078866787"
-#define share @"ca-app-pub-4227955678326630/2932183666"
+
 
 
 //测试ID
@@ -31,16 +33,25 @@
 #define test_interstitial_award @"ca-app-pub-3940256099942544/4411468910"//插屏广告
 #define test_devices @"19aed38176933c43a3be1762e7926237"
 //测试模式
-#define TESTMODE NO
+#define TESTMODE YES
 @import GoogleMobileAds;
 
 @interface ADManager : NSObject
 +(ADManager*)manager;
-
+//创建banner广告view，将其添加到你的view中
 - (GADBannerView *)createBannerAdViewWithViewController:(UIViewController *)viewController withFrame:(CGRect)frame withID:(NSString *)adID;
+//创建插屏单个广告，创建方法应提前执行，以达到良好的体验效果
 - (void)createInterstitialAdWithDeletage:(id<GADInterstitialDelegate>)deletage withID:(NSString *)adID;
-- (BOOL)showInterstitialAdWithViewController:(UIViewController *)viewController ;
+//展示最后创建的插屏广告，用于单个页面只有一个插屏广告时掉用，在需要展示的广告位展示
+- (BOOL)showInterstitialAdWithViewController:(UIViewController *)viewController;
+//同时创建多个插屏广告
+- (void)createInterstitialAdWithDeletage:(id<GADInterstitialDelegate>)deletage withIDs:(NSArray *)adIDs;
+//根据id展示具体的插屏广告，返回是否广告是否准备成功，
+- (BOOL)showInterstitialAdWithViewController:(UIViewController *)viewController withID:(NSString *)adID;
+
+//创建视频广告，视频广告只能同时存在一个
 - (void)createVideoAdWithViewController:(id<GADRewardBasedVideoAdDelegate>)viewController withID:(NSString *)adID;
+//展示视频广告
 - (BOOL)showVideoAdWithViewController:(UIViewController *)viewController ;
 @end
 
