@@ -41,18 +41,16 @@
 //创建banner广告view，将其添加到你的view中
 - (GADBannerView *)createBannerAdViewWithViewController:(UIViewController *)viewController withFrame:(CGRect)frame withID:(NSString *)adID;
 //创建插屏单个广告，创建方法应提前执行，以达到良好的体验效果
-- (void)createInterstitialAdWithDeletage:(id<GADInterstitialDelegate>)deletage withID:(NSString *)adID;
-//展示最后创建的插屏广告，用于单个页面只有一个插屏广告时掉用，在需要展示的广告位展示
-- (BOOL)showInterstitialAdWithViewController:(UIViewController *)viewController;
-//同时创建多个插屏广告
-- (void)createInterstitialAdWithDeletage:(id<GADInterstitialDelegate>)deletage withIDs:(NSArray *)adIDs;
-//根据id展示具体的插屏广告，返回是否广告是否准备成功，
-- (BOOL)showInterstitialAdWithViewController:(UIViewController *)viewController withID:(NSString *)adID;
+- (GADInterstitial*)createInterstitialAdWithDeletage:(id<GADInterstitialDelegate>)deletage withID:(NSString *)adID;
+
+//展示具体的插屏广告，返回是否广告是否准备成功，
+- (BOOL)showInterstitialAdWithViewController:(UIViewController *)viewController withAD:(GADInterstitial *)ad;
 
 //创建视频广告，视频广告只能同时存在一个
 - (void)createVideoAdWithViewController:(id<GADRewardBasedVideoAdDelegate>)viewController withID:(NSString *)adID;
 //展示视频广告
 - (BOOL)showVideoAdWithViewController:(UIViewController *)viewController ;
+
 @end
 
 

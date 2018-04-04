@@ -17,6 +17,7 @@ static FirebaseController* manager;
         manager = [[FirebaseController alloc]init];
         [manager setRemoteConfig];
     }
+    [manager fetchConfig];
     return manager;
 }
 
@@ -33,7 +34,6 @@ static FirebaseController* manager;
 
     [self.remoteConfig setDefaultsFromPlistFileName:@"RemoteConfigDefaults"];
 
-    [self fetchConfig];
 }
 -(NSMutableArray *)array{
     if (!_array) {
@@ -73,8 +73,6 @@ static FirebaseController* manager;
                 [def setObject:@"100" forKey:ration];
             }
         }
-        [def synchronize];
-        [self loadAD];
         if (self.deletage && [self.deletage respondsToSelector:@selector(onFirebaseReceivedDate)]) {
             [self.deletage onFirebaseReceivedDate];
         }

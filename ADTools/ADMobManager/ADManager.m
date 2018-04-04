@@ -7,11 +7,6 @@
 //
 
 #import "ADManager.h"
-@interface ADManager ()
-@property(nonatomic, strong) GADInterstitial*interstitial;
-@property(nonatomic, strong) NSMutableDictionary *interstitials;
-
-@end
 static ADManager * manager;
 @implementation ADManager
 +(ADManager*)manager{
@@ -49,63 +44,32 @@ static ADManager * manager;
     return bannerView;
     
 }
-- (void)createInterstitialAdWithDeletage:(id<GADInterstitialDelegate>)deletage withID:(NSString *)adID{
-    if (TESTMODE) {
-        self.interstitial = [[GADInterstitial alloc]
-                             initWithAdUnitID:test_interstitial_award];
-    }else{
-        self.interstitial = [[GADInterstitial alloc]
-                             initWithAdUnitID:adID];
+- (GADInterstitial*)createInterstitialAdWithDeletage:(id<GADInterstitialDelegate>)deletage withID:(NSString *)adID{
+    if (!adID || [adID isEqualToString:@""]) {
+        return nil;
     }
-    self.interstitial.delegate = deletage;
+    GADInterstitial * interstitial;
+    if (TESTMODE) {
+        interstitial = [[GADInterstitial alloc]
+                        initWithAdUnitID:test_interstitial_award];
+    }else{
+        interstitial = [[GADInterstitial alloc]
+                        initWithAdUnitID:adID];
+    }
+    interstitial.delegate = deletage;
     GADRequest *request = [GADRequest request];
     if (TESTMODE) {
         request.testDevices = @[ test_devices ];
     }
-    [self.interstitial loadRequest:request];
-    if (!self.interstitials) {
-        self.interstitials = [NSMutableDictionary dictionary];
-    }
-    [self.interstitials setObject:self.interstitial forKey:adID];
-}
-- (BOOL)showInterstitialAdWithViewController:(UIViewController *)viewController {
-    if (self.interstitial.isReady) {
-        [self.interstitial presentFromRootViewController:viewController];
-        return YES;
-    } else {
-        NSLog(@"Ad wasn't ready");
-        return NO;
-    }
+    [interstitial loadRequest:request];
+    return interstitial;
 }
 
--(void)createInterstitialAdWithDeletage:(id<GADInterstitialDelegate>)deletage withIDs:(NSArray *)adIDs{
-    if (!self.interstitials) {
-        self.interstitials = [NSMutableDictionary dictionary];
-    }
-    for (NSString * adID in adIDs) {
-        GADInterstitial * interstitial;
-        if (TESTMODE) {
-            interstitial = [[GADInterstitial alloc]
-                                 initWithAdUnitID:test_interstitial_award];
-        }else{
-            interstitial = [[GADInterstitial alloc]
-                                 initWithAdUnitID:adID];
-        }
-        interstitial.delegate = deletage;
-        GADRequest *request = [GADRequest request];
-        if (TESTMODE) {
-            request.testDevices = @[ test_devices ];
-        }
-        [interstitial loadRequest:request];
-        [self.interstitials setObject:interstitial forKey:adID];
-    }
-}
-
--(BOOL)showInterstitialAdWithViewController:(UIViewController *)viewController withID:(NSString *)adID{
-    GADInterstitial * interstitial = [self.interstitials objectForKey:adID];
-    if (interstitial) {
-        if (interstitial.isReady) {
-            [interstitial presentFromRootViewController:viewController];
+-(BOOL)showInterstitialAdWithViewController:(UIViewController *)viewController withAD:(GADInterstitial *)ad{
+    
+    if (ad) {
+        if (ad.isReady) {
+            [ad presentFromRootViewController:viewController];
             return YES;
         } else {
             NSLog(@"Ad wasn't ready");
