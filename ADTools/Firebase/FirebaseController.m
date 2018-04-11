@@ -11,6 +11,16 @@
 static FirebaseController* manager;
 
 @implementation FirebaseController
+
+-(NSMutableArray *)array{
+    if (!_array) {
+        _array = [NSMutableArray array];
+        //在下面添加配置的ad_ratio
+        
+    }
+    return _array;
+}
+
 +(FirebaseController*)manager{
     if (!manager) {
         [FIRApp configure];
@@ -28,31 +38,21 @@ static FirebaseController* manager;
         return;
     }
     self.remoteConfig = [FIRRemoteConfig remoteConfig];
-
+    
     FIRRemoteConfigSettings *remoteConfigSettings = [[FIRRemoteConfigSettings alloc] initWithDeveloperModeEnabled:NO];
     self.remoteConfig.configSettings = remoteConfigSettings;
-
+    
     [self.remoteConfig setDefaultsFromPlistFileName:@"RemoteConfigDefaults"];
-
 }
--(NSMutableArray *)array{
-    if (!_array) {
-        _array = [NSMutableArray array];
-        
-        
-        //在下面添加配置的ad_ratio
 
-    }
-    return _array;
-}
 - (void)fetchConfig {
-
+    
     long expirationDuration = 3600;
-
+    
     if (self.remoteConfig.configSettings.isDeveloperModeEnabled) {
         expirationDuration = 0;
     }
-
+    
     [self.remoteConfig fetchWithExpirationDuration:expirationDuration completionHandler:^(FIRRemoteConfigFetchStatus status, NSError *error) {
         if (error) {
             NSLog(@"%@",error);
@@ -77,7 +77,6 @@ static FirebaseController* manager;
             [self.deletage onFirebaseReceivedDate];
         }
     }];
- 
 }
 
 - (BOOL)isPureInt:(NSString *)string{
@@ -86,7 +85,12 @@ static FirebaseController* manager;
     return [scan scanInt:&val] && [scan isAtEnd];
 }
 
+
+
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio{
+    return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:100];
+}
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio{
     BOOL canloadAD = YES;
     if (self.removeAdDelegate && [self.removeAdDelegate respondsToSelector:@selector(canLoadAD)]) {
         canloadAD = [self.removeAdDelegate canLoadAD];
@@ -95,15 +99,15 @@ static FirebaseController* manager;
         return NO;
     }
     NSUserDefaults * def = [NSUserDefaults standardUserDefaults];
-    NSString * adRatioStr = @"100";
+    NSString * adRatioStr;
     if (ad_ratio) {
         adRatioStr = [def objectForKey:ad_ratio];//根据具体的需求获取控制标志。
     }
-    if (!adRatioStr) {
-        adRatioStr = @"100";
-    }
-    int adRatio = [adRatioStr intValue];
+    NSInteger adRatio = defaultAdRatio;
     
+    if (adRatioStr && [self isPureInt:adRatioStr]) {
+        adRatio = [adRatioStr intValue];
+    }
     int ratio = arc4random() % 100 + 1;
     if(adRatio == 100)//100 显示广告
     {
@@ -117,12 +121,23 @@ static FirebaseController* manager;
     }
     return NO;
 }
--(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andTimeRaio:(NSString *) time_ratio{
-    return [self canLoadADByAdRatio:ad_ratio andTimeRaio:time_ratio andTime:3];
+
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio{
+    return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:defaultAdRatio andTimeRaio:time_ratio andDefaultTimeRatio:100];
 }
 
--(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andTimeRaio:(NSString *)time_ratio andTime:(NSInteger)dayTime{
-    if ([self canLoadADByAdRatio:ad_ratio]) {
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio andDefaultTimeRatio:(NSInteger)defaultTimeRatio{
+    
+    
+    return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:defaultAdRatio andTimeRaio:time_ratio andDefaultTimeRatio:defaultTimeRatio andDayTimeRatio:nil];
+}
+
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio andDefaultTimeRatio:(NSInteger)defaultTimeRatio andDayTimeRatio:(NSString *)dayTime_ratio{
+    return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:defaultAdRatio andTimeRaio:time_ratio andDefaultTimeRatio:defaultTimeRatio andDayTimeRatio:dayTime_ratio andDefaultDayTimeRatio:3];
+}
+
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio andDefaultTimeRatio:(NSInteger)defaultTimeRatio andDayTimeRatio:(NSString *)dayTime_ratio andDefaultDayTimeRatio:(NSInteger)defaultDayTimeRatio{
+    if ([self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:defaultAdRatio]) {
         NSString * numberKey = [time_ratio stringByAppendingString:@"_number"];
         NSString * dateKey = [time_ratio stringByAppendingString:@"_date"];
         NSString * timeKey = [time_ratio stringByAppendingString:@"_time"];
@@ -135,20 +150,20 @@ static FirebaseController* manager;
         NSInteger number = [def integerForKey:numberKey];//当天出现的次数。
         NSInteger time = [def integerForKey:timeKey];//当天出现的次数。
         NSDate * date = [def objectForKey:dateKey];//上次出现的日期。
-        if (!date) {
-            number = 0;
-            date = [NSDate date];
-        }
-        if([self numberOfDaysAtDate:date andDate:[NSDate date]] >0){
+        if(!date||[self numberOfDaysAtDate:date andDate:[NSDate date]] >0){
             number = 0;
             date = [NSDate date];
             time = 0;
+            [def setObject:date forKey:dateKey];
+            [def setInteger:number forKey:numberKey];
+            [def setInteger:time forKey:timeKey];
         }
-        if (number < [self numberOfOneDayCanLoadByTimeRatio:time_ratio]) {
+        NSInteger dayTime = [self numberOfOneDayCanLoadByDayTimeRatio:dayTime_ratio andDefaultDayTimeRatio:defaultDayTimeRatio];
+        NSInteger max = [self numberOfOneDayCanLoadByTimeRatio:time_ratio andDefaultTimeRatio:defaultTimeRatio];
+        if (number < max) {
             if (time % dayTime == dayTime -1) {
                 number ++;
                 [def setInteger:number forKey:numberKey];
-                [def setObject:date forKey:dateKey];
                 time = 0;
                 [def setInteger:time forKey:timeKey];
                 return YES;
@@ -156,9 +171,17 @@ static FirebaseController* manager;
             time ++;
             [def setInteger:time forKey:timeKey];
         }
-        NSLog(@"number = %ld   daytime = %ld   time = %ld  max = %ld",number,dayTime,time,[self numberOfOneDayCanLoadByTimeRatio:time_ratio]);
+        NSLog(@"number = %ld   daytime = %ld   time = %ld  max = %ld",number,dayTime,time,max);
     }
     return NO;
+    
+}
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andTimeRaio:(NSString *) time_ratio{
+    return [self canLoadADByAdRatio:ad_ratio andTimeRaio:time_ratio];
+}
+
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andTimeRaio:(NSString *)time_ratio andDefaultTimeRatio:(NSInteger)defaultTimeRatio andDayTimeRatio:(NSString *)dayTime_ratio{
+    return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:100 andTimeRaio:time_ratio andDefaultTimeRatio:defaultTimeRatio andDayTimeRatio:dayTime_ratio andDefaultDayTimeRatio:6];
 }
 
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andTimeRaio:(NSString *)time_ratio andDayTimeRatio:(NSString *)dayTime_ratio{
@@ -166,18 +189,8 @@ static FirebaseController* manager;
 }
 
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andTimeRaio:(NSString *)time_ratio andDayTimeRatio:(NSString *)dayTime_ratio andDefaultDayTimeRatio:(NSInteger)defaultDayTimeRatio{
-    NSUserDefaults * def = [NSUserDefaults standardUserDefaults];
-    NSString * adRatioStr = [NSString stringWithFormat:@"%ld",defaultDayTimeRatio];
-    if (dayTime_ratio) {
-        adRatioStr = [def objectForKey:dayTime_ratio];//根据具体的需求获取控制标志。
-    }
-    if (!adRatioStr) {
-        adRatioStr = [NSString stringWithFormat:@"%ld",defaultDayTimeRatio];
-    }
-    int adRatio = [adRatioStr intValue];
-    return [self canLoadADByAdRatio:ad_ratio andTimeRaio:time_ratio andTime:adRatio];
+    return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:100 andTimeRaio:time_ratio andDefaultTimeRatio:100 andDayTimeRatio:dayTime_ratio andDefaultDayTimeRatio:defaultDayTimeRatio];
 }
-
 -(NSInteger)numberOfDaysAtDate:(NSDate *) firstData andDate:(NSDate*)secondData{
     NSCalendar *gregorian = [[NSCalendar alloc]
                              initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
@@ -192,20 +205,23 @@ static FirebaseController* manager;
     return labs(dayComponents.day);
 }
 
--(NSInteger)numberOfOneDayCanLoadByTimeRatio:(NSString *) time_ratio{
+-(NSInteger)numberOfOneDayCanLoadByTimeRatio:(NSString *) time_ratio andDefaultTimeRatio:(NSInteger)defaultTimeRatio{
     NSInteger number = NSIntegerMax;
     if (self.removeAdDelegate && [self.removeAdDelegate respondsToSelector:@selector(canLoadAD)]) {
         number = [self.removeAdDelegate canLoadAD]?number:0;
     }
+    if (number == 0) {
+        return number;
+    }
     NSUserDefaults * def = [NSUserDefaults standardUserDefaults];
-    NSString * adRatioStr = @"3";
+    NSString * adRatioStr;
     if (time_ratio) {
         adRatioStr = [def objectForKey:time_ratio];//根据具体的需求获取控制标志。
     }
-    if (!adRatioStr) {
-        adRatioStr = @"3";
+    NSInteger adRatio = defaultTimeRatio;
+    if (adRatioStr && [self isPureInt:adRatioStr]) {
+        adRatio = [adRatioStr intValue];
     }
-    int adRatio = [adRatioStr intValue];
     if(adRatio == 100)//100 显示广告
     {
         number = NSIntegerMax;
@@ -214,17 +230,29 @@ static FirebaseController* manager;
     }
     return number;
 }
-
--(void)loadAD{
+-(NSInteger)numberOfOneDayCanLoadByDayTimeRatio:(NSString *) dayTime_ratio andDefaultDayTimeRatio:(NSInteger)defaultDayTimeRatio{
+    NSInteger number = NSIntegerMax;
     if (self.removeAdDelegate && [self.removeAdDelegate respondsToSelector:@selector(canLoadAD)]) {
         if (![self.removeAdDelegate canLoadAD]) {
-            return;
+            return number;
         }
     }
-    if (self.deletage && [self.deletage respondsToSelector:@selector(loadAD)]) {
-        [self.deletage loadAD];
+    NSUserDefaults * def = [NSUserDefaults standardUserDefaults];
+    NSString * adRatioStr;
+    if (dayTime_ratio) {
+        adRatioStr = [def objectForKey:dayTime_ratio];//根据具体的需求获取控制标志。
     }
-
+    NSInteger adRatio = defaultDayTimeRatio;
+    if (adRatioStr && [self isPureInt:adRatioStr]) {
+        adRatio = [adRatioStr intValue];
+    }
+    if(adRatio == 100)//100 显示广告
+    {
+        number = NSIntegerMax;
+    }else{
+        number = adRatio;
+    }
+    return number;
 }
 
 -(void)dealloc{
