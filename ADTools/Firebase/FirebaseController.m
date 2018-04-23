@@ -11,16 +11,6 @@
 static FirebaseController* manager;
 
 @implementation FirebaseController
-
--(NSMutableArray *)array{
-    if (!_array) {
-        _array = [NSMutableArray array];
-        //在下面添加配置的ad_ratio
-        
-    }
-    return _array;
-}
-
 +(FirebaseController*)manager{
     if (!manager) {
         [FIRApp configure];
@@ -44,7 +34,13 @@ static FirebaseController* manager;
     
     [self.remoteConfig setDefaultsFromPlistFileName:@"RemoteConfigDefaults"];
 }
-
+-(NSMutableArray *)array{
+    if (!_array) {
+        _array = [NSMutableArray array];
+        //在下面添加配置的ad_ratio
+    }
+    return _array;
+}
 - (void)fetchConfig {
     
     long expirationDuration = 3600;
@@ -61,7 +57,7 @@ static FirebaseController* manager;
         NSUserDefaults * def = [NSUserDefaults standardUserDefaults];
         
         for (NSString *ration in self.array) {
-            if (status == FIRRemoteConfigFetchStatusSuccess) {
+            if (status == FIRRemoteConfigFetchStatusSuccess || status == FIRRemoteConfigFetchStatusThrottled) {
                 [self.remoteConfig activateFetched];
                 NSString *adRatioStr = _remoteConfig[ration].stringValue;
                 if ([self isPureInt:adRatioStr]) {
@@ -69,9 +65,9 @@ static FirebaseController* manager;
                 }else{
                     [def setObject:@"100" forKey:ration];
                 }
-            } else {
-                [def setObject:@"100" forKey:ration];
             }
+            NSLog(@"%@------%@",ration,_remoteConfig[ration].stringValue);
+            
         }
         if (self.deletage && [self.deletage respondsToSelector:@selector(onFirebaseReceivedDate)]) {
             [self.deletage onFirebaseReceivedDate];
@@ -91,11 +87,14 @@ static FirebaseController* manager;
     return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:100];
 }
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio{
+    return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:defaultAdRatio isAD:YES];
+}
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio isAD:(BOOL)isAD{
     BOOL canloadAD = YES;
     if (self.removeAdDelegate && [self.removeAdDelegate respondsToSelector:@selector(canLoadAD)]) {
         canloadAD = [self.removeAdDelegate canLoadAD];
     }
-    if (canloadAD == NO) {
+    if (isAD && canloadAD == NO) {
         return NO;
     }
     NSUserDefaults * def = [NSUserDefaults standardUserDefaults];
@@ -122,6 +121,7 @@ static FirebaseController* manager;
     return NO;
 }
 
+
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio{
     return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:defaultAdRatio andTimeRaio:time_ratio andDefaultTimeRatio:100];
 }
@@ -137,14 +137,19 @@ static FirebaseController* manager;
 }
 
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio andDefaultTimeRatio:(NSInteger)defaultTimeRatio andDayTimeRatio:(NSString *)dayTime_ratio andDefaultDayTimeRatio:(NSInteger)defaultDayTimeRatio{
-    if ([self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:defaultAdRatio]) {
+    return [self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:defaultAdRatio andTimeRaio:time_ratio andDefaultTimeRatio:defaultTimeRatio andDayTimeRatio:dayTime_ratio andDefaultDayTimeRatio:defaultDayTimeRatio isAD:YES];
+}
+
+
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio andDefaultTimeRatio:(NSInteger)defaultTimeRatio andDayTimeRatio:(NSString *)dayTime_ratio andDefaultDayTimeRatio:(NSInteger)defaultDayTimeRatio isAD:(BOOL)isAD{
+    if ([self canLoadADByAdRatio:ad_ratio andDefaultAdRatio:defaultAdRatio isAD:isAD]) {
         NSString * numberKey = [time_ratio stringByAppendingString:@"_number"];
         NSString * dateKey = [time_ratio stringByAppendingString:@"_date"];
         NSString * timeKey = [time_ratio stringByAppendingString:@"_time"];
         if (!time_ratio) {
-            numberKey = [time_ratio stringByAppendingString:@"default_number"];
-            dateKey = [time_ratio stringByAppendingString:@"default_date"];
-            timeKey = [time_ratio stringByAppendingString:@"default_time"];
+            numberKey = @"default_number";
+            dateKey = @"default_date";
+            timeKey = @"default_time";
         }
         NSUserDefaults * def = [NSUserDefaults standardUserDefaults];
         NSInteger number = [def integerForKey:numberKey];//当天出现的次数。

@@ -81,7 +81,6 @@
 //5、如果需要每隔一段时间自动加载广告，则实现FirebaseControllerDeletage
 //6、如果需要加入去广告控制，则实现RemoveADDelegate
 
-
 #import <Foundation/Foundation.h>
 #import "Firebase.h"
 @protocol RemoveADDelegate;
@@ -97,6 +96,7 @@
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio;
 //ad_ratio字段控制广告比率 defaultAdRatio为ad_ratio的默认值
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio;
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio isAD:(BOOL)isAD;
 
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio;
 
@@ -108,6 +108,7 @@
 //ad_ratio与time_ratio,dayTime_ratio字段同时控制广告能否显示  defaultTimeRatio 为time_ratio的默认值
 //所有的控制字段皆可为空。空代表不做控制，用默认值控制
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio andDefaultTimeRatio:(NSInteger)defaultTimeRatio andDayTimeRatio:(NSString *)dayTime_ratio andDefaultDayTimeRatio:(NSInteger)defaultDayTimeRatio;
+-(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andDefaultAdRatio:(NSInteger)defaultAdRatio andTimeRaio:(NSString *)time_ratio andDefaultTimeRatio:(NSInteger)defaultTimeRatio andDayTimeRatio:(NSString *)dayTime_ratio andDefaultDayTimeRatio:(NSInteger)defaultDayTimeRatio isAD:(BOOL)isAD;
 
 
 //time_ratio字段控制每天最多显示次数 0代表无，100代表无限制，1-99控制次数
@@ -121,6 +122,7 @@
 
 //ad_ratio与time_ratio,dayTime_ratio字段同时控制广告能否显示 defaultDayTimeRatio 为dayTime_ratio的默认值
 -(BOOL)canLoadADByAdRatio:(NSString *)ad_ratio andTimeRaio:(NSString *)time_ratio andDayTimeRatio:(NSString *)dayTime_ratio andDefaultDayTimeRatio:(NSInteger)defaultDayTimeRatio;
+
 @end
 @protocol FirebaseControllerDeletage<NSObject>
 @optional
