@@ -5,7 +5,15 @@
 //  Created by 阿杰 on 2017/12/27.
 //  Copyright © 2017年 baiwamg. All rights reserved.
 //
+#ifdef DEBUG
 
+#define FIREBASETESTMODE YES
+
+#else
+
+#define FIREBASETESTMODE NO
+
+#endif
 #import "FirebaseController.h"
 
 static FirebaseController* manager;
@@ -29,7 +37,7 @@ static FirebaseController* manager;
     }
     self.remoteConfig = [FIRRemoteConfig remoteConfig];
     
-    FIRRemoteConfigSettings *remoteConfigSettings = [[FIRRemoteConfigSettings alloc] initWithDeveloperModeEnabled:NO];
+    FIRRemoteConfigSettings *remoteConfigSettings = [[FIRRemoteConfigSettings alloc] initWithDeveloperModeEnabled:FIREBASETESTMODE];
     self.remoteConfig.configSettings = remoteConfigSettings;
     
     [self.remoteConfig setDefaultsFromPlistFileName:@"RemoteConfigDefaults"];
@@ -60,10 +68,11 @@ static FirebaseController* manager;
             if (status == FIRRemoteConfigFetchStatusSuccess || status == FIRRemoteConfigFetchStatusThrottled) {
                 [self.remoteConfig activateFetched];
                 NSString *adRatioStr = _remoteConfig[ration].stringValue;
-                if ([self isPureInt:adRatioStr]) {
-                    [def setObject:adRatioStr forKey:ration];
-                }else{
-                    [def setObject:@"100" forKey:ration];
+                if (adRatioStr) {
+                    adRatioStr = [adRatioStr stringByReplacingOccurrencesOfString:@" " withString:@""];
+                    if (![adRatioStr isEqualToString:@""]) {
+                        [def setObject:adRatioStr forKey:ration];
+                    }
                 }
             }
             NSLog(@"%@------%@",ration,_remoteConfig[ration].stringValue);

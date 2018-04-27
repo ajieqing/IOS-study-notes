@@ -32,8 +32,7 @@
 #define test_video_award @"ca-app-pub-3940256099942544/1712485313"//视频广告
 #define test_interstitial_award @"ca-app-pub-3940256099942544/4411468910"//插屏广告
 #define test_devices @"19aed38176933c43a3be1762e7926237"
-//测试模式
-#define TESTMODE YES
+
 @import GoogleMobileAds;
 
 @interface ADManager : NSObject

@@ -5,7 +5,14 @@
 //  Created by 阿杰 on 2017/12/26.
 //  Copyright © 2017年 baiwamg. All rights reserved.
 //
+#ifdef DEBUG
 
+#define TESTMODE YES
+
+#else
+
+#define TESTMODE NO
+#endif
 #import "ADManager.h"
 static ADManager * manager;
 @implementation ADManager
